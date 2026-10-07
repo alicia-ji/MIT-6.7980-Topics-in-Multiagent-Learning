@@ -6,6 +6,32 @@
   instructor: [Prof. Constantinos Daskalakis (`costis@mit.edu`)],
 )
 
+// Define a reusable disclosure/toggle function
+#let toggle(title, body) = {
+  context if sys.inputs.at("target", default: none) == "html" or target() == "html" {
+    // Interactive element for the web
+    html.elem("details")[
+      #html.elem("summary")[*#title*]
+      #body
+    ]
+  } else {
+    // Static layout representation for PDFs (styled box)
+    block(
+      width: 100%,
+      stroke: 0.5pt + luma(150),
+      inset: 10pt,
+      radius: 4pt,
+      fill: luma(245),
+      [
+        #text(weight: "bold", title)
+        #v(4pt)
+        #line(length: 100%, stroke: 0.5pt + luma(200))
+        #body
+      ]
+    )
+  }
+}
+
 In previous lectures, we saw the basic game theory formalism, and some of the most fundamental equilibrium concepts, and their existence proofs. The #lecture-link("nfgs_nash", <sec-nash-existence>)[proof of Nash equilibrium existence] makes use of Brouwer's fixed point theorem, which does not immediately suggest an algorithm for computing Nash equilibria. On the other hand, we saw that the existence of Nash equilibrium in two-player zero-sum games can also be established using #lecture-link("correlated", <sec-zero-sum>)[strong linear programming duality], which suggests a polynomial-time algorithm for computing Nash equilibria in these games.
 
 Similarly, correlated and coarse correlated equilibria in general-sum games can also be computed in time polynomial in the game description using linear programming, as the equilibrium constraints can be written as a system of linear inequalities in the joint distribution over actions. Moreover, linear programming methods can be leveraged to obtain polynomial-time algorithms for certain families of what are called “succinct games,” wherein the payoffs are sparse or have other structure that makes an explicit representation of a joint distribution over actions super-polynomial in  size compared to the game's natural description. Still a correlated or coarse correlated equilibrium can be computed efficiently in many cases, using linear programming approaches such as #lecture-link("eah", <sec-minimax-algorithm>)[Ellipsoid Against Hope]~#citep(<papadimitriou2008computing>).
@@ -82,6 +108,10 @@ $ B dot.op L dot.op \( n k \)^(O \( n k \)) . $
 
 Recall that the bits required to represent a $n$-player game with $k$ actions per player is $L dot.op n dot.op k^n$. So the running time of our algorithm could be exponential in the description of the game, e.g.~when $n$ stays constant and $k$ goes to infinity. On the other hand, the running time is quasi-polynomial if the growth of $k$ is bounded by a polynomial in $n$.#footnote[A _quasi-polynomial-time algorithm_ for some computational task is an algorithm that solves an instance $Pi$ of the task in time $2^(op("poly") \( log d \( Pi \) \))$, where $d \( Pi \)$ is the description complexity of instance $Pi$. If the polynomial in the exponent of the running time is of degree $1$ the algorithm is called _polynomial-time_.]
 
+#exercise[
+  For a two-player game, given the supports $S_C$ and $S_R$, if there are finitely many Nash equilibria with that support, must there be only one? What about an n-player game?
+] <S01-ImprovementP3.3>
+
 = Algorithms for Symmetric Games
 #label("sec:symmetric games")
 
@@ -146,11 +176,11 @@ In the previous section, we saw that, when the number of actions $k = O \( n \)$
 
 We will show that this is impossible for two-player symmetric games, unless there is a polynomial-time algorithms for arbitrary two-player games. In particular, we will show a polynomial-time reduction from the problem of computing a Nash equilibrium in general two-player games to the problem of computing a Nash equilibrium in two-player symmetric games. The reduction we present is due to Gale, Kuhn and Tucker~#citep(<GaleKuhnTucker52>).
 
-Suppose that we are given an arbitrary two-player game $cal(G)_1 := \( R \, C \)$ and we want to compute a Nash equilibrium of this game. Given the following simple exercise, we will assume, without loss of generality, that $R$ and $C$  have strictly positive entries, i.e.~that $R \, C in bb(R)_(+)^(m times n) \,$ where $m$ and $n$ are, respectively, the number of actions of the row and column players.
+Suppose that we are given an arbitrary two-player game $cal(G)_1 := \( R \, C \)$ and we want to compute a Nash equilibrium of this game. Given the following simple exercise, we will assume, without loss of generality, that $R$ and $C$  have strictly positive entries, i.e.~that $R \, C in bb(R)_(>0)^(m times n) \,$ where $m$ and $n$ are, respectively, the number of actions of the row and column players.
 
 #exercise[
   Show that computing a Nash equilibrium of an arbitrary game $cal(G)$ can be polynomial-time reduced to the problem of computing a Nash equilibrium of a game $cal(G)'$ whose payoff entries are all strictly positive.
-]
+] <S01-ImprovementP3.1>
 
 Next, we will construct a $\( m + n \) times \( m + n \)$ symmetric game $cal(G)_2$, with the following payoff matrices in block form:
 
@@ -369,3 +399,172 @@ Finally, exactness and polynomial time are compatible when the game has structur
 = Bibliography for this lecture
 
 #lec_bibliography("meta/refs.bib", title: none)
+
+= Appendix A: Solutions to Selected Exercises
+
+== Solution to #ref(<S01-ImprovementP3.3>)
+
+#toggle[Reveal Solution to #ref(<S01-ImprovementP3.3>)][
+  #proof[
+  Consider an two-player game $cal(G):= (R,C)$. Suppose we are given the supports $S_R$ and $S_C$ and know that there are finitely many Nash equilibria with these supports. We will prove that there must be only one such Nash equilibrium.
+
+  Assume for sake of contradiction that there are at least two Nash equilibria $(vx_1, vy_1)$ and $(vx_2, vy_2)$ with supports $S_R$ and $S_C$.
+
+  For any $t in [0,1]$, define
+  $
+    bold(x)_t := t bold(x)_1 + (1-t) bold(x)_2 quad upright("and") quad
+    bold(y)_t := t bold(y)_1 + (1-t) bold(y)_2.
+  $
+
+  Since both Nash equilibria have the same supports, for every $t in (0,1)$ $vx_t$ and $vy_t$ also have the same supports, since the coordinates corresponding to the common support will be strictly positive for linear combinations.
+
+  We now show that $(bold(x)_t, bold(y)_t)$ is also a Nash equilibrium.
+
+  Since $(bold(x)_1, bold(y)_1)$ and $(bold(x)_2, bold(y)_2)$ are Nash equilibria, every row in $S_R$ is a best response to both $bold(y)_1$ and $bold(y)_2$. Thus, there exist $u_1,u_2 in bb(R)$ such that
+  $
+  R_(S_R,S_C) bold(y)_1 = u_1 bold(1)
+  quad
+  upright("and")
+  quad
+  R_(S_R,S_C) bold(y)_2 = u_2 bold(1).
+  $
+
+  where $R_(S_R,S_C)$ is the payoff matrix restricted to the rows and columns of the supports.
+
+  By linearity in the opponent's mixed strategy,
+  $
+  R_(S_R,S_C) bold(y)_t
+  = t R_(S_R,S_C) bold(y)_1
+  + (1-t) R_(S_R,S_C) bold(y)_2
+  = (t u_1 + (1-t)u_2) bold(1).
+  $
+
+  Hence every row in $S_R$ is a best response to $bold(y)_t$.
+
+  Similarly, because every column in $S_C$ is a best response to both $bold(x)_1$ and $bold(x)_2$, we find that every column in $S_C$ is a best response to the linear combination $bold(x)_t$.
+
+  Finally, since $bold(x)_t$ and $bold(y)_t$ assign probability zero to actions outside $S_R$ and $S_C$, respectively, and every action in their supports is a best response to the opponent's strategy, $(bold(x)_t, bold(y)_t)$ is a Nash equilibrium.
+
+  Thus, for every $t in (0,1)$, there is a Nash equilibrium with supports $S_R$ and $S_C$. Since the two original equilibria are distinct, these equilibria are distinct for infinitely many values of $t$.
+
+  This contradicts the assumption that there are only finitely many Nash equilibria with supports $S_R$ and $S_C$. Therefore, there can be only one Nash equilibrium with the given supports in a two-player game.
+
+  \
+
+  In contrast, for $n$-player games with $n >= 3$, the analogous statement is *false*.
+  That is, it is possible to have finitely many Nash equilibria with the same supports, but more than one such equilibrium.
+
+  The key difference from the two-player case is that, in an $n$-player
+  game, a player's expected payoff is generally *multilinear* in the
+  other players' mixed strategies. Thus, the indifference conditions are
+  not linear in all players' strategies simultaneously, and they may have
+  multiple isolated solutions.
+
+  We present a counterexample in the case of $n=3$. Consider the following symmetric three-player game with two actions,
+  $0$ and $1$. For a player, let the difference between the payoff from
+  action $1$ and the payoff from action $0$ depend on the number $k$ of
+  the other two players who choose action $1$. Define
+
+  $ d(0) = 3, quad d(1) = -5, quad d(2) = 3. $
+
+  Suppose that player $i$ independently chooses action $1$ with
+  probability $p_i$. The expected payoff difference between choosing action
+  $1$ and choosing action $0$ for player 1 is then
+
+  $ 3(1-p_2)(1-p_3) - 5p_2(1-p_3) - 5(1-p_2)p_3 + 3p_2p_3. $
+
+  Player 1 satisfies the conditions for Nash equilibrium when they are indifferent to the action they take, in other words, when
+
+  $ 3 - 8p_2 - 8p_3 + 16p_2p_3 = 0. $
+
+  Similarly, the other two players require
+
+  $ 3-8p_1-8p_3+16p_1p_3&=0 \
+    3-8p_1-8p_2+16p_1p_2&=0. $
+
+  Subtracting pairs of equations yields the equations
+
+  $ (p_1-p_2)(1-2p_3)=0 \
+    (p_2-p_3)(1-2p_1)=0 \
+    (p_3-p_1)(1-2p_2)=0. $
+
+  Suppose some player chooses to use a mixed strategy with probability $1/2$. Without loss of generality suppose $p_1 = 1/2$. Then the original expected payoff condition for player 2 reduces to
+
+  $ 3-8p_1-8p_3+16p_1p_3& = -1 $
+
+  which contradicts the indifference condition. Thus, there are no Nash equilibria when $p_i = 1/2$, so for Nash equilibrium to hold, we must have $p_1 = p_2 = p_3 = p$, In this case, the indifference conditions reduce to 
+
+  $ 3 - 16p + 16 p^2 = 0, $
+
+  which yields solutions $p = 1/4$ or $p = 3/4. $
+
+  This gives two distinct completely mixed Nash equilibria:
+
+  $ (1/4, 1/4, 1/4)
+    quad "and" quad
+    (3/4, 3/4, 3/4). $
+
+  Both equilibria have the same support, as every player assigns positive probability to both actions. Furthermore, we have proven that there are no further Nash equilibria for this game. Hence, unlike the two-player case, finiteness of the number of Nash equilibria with a given support does *not* imply uniqueness when there are three or more players.
+  ]
+]
+== Solution to #ref(<S01-ImprovementP3.1>)
+
+#toggle[Reveal Solution to #ref(<S01-ImprovementP3.1>)][
+  #proof[
+  Consider an arbitrary game $cal(G)$ with $n$ players. We will prove that the problem of computing a Nash equilibrium of $cal(G)$ polynomial-time reduces to the problem of computing a Nash equilibrium of a game $cal(G)'$ whose payoff entries are all strictly positive.
+  
+  Let the $i$th player in $cal(G)$ choose actions from the set $A_i$ and let $u_1,u_2,...,u_n$ be the payoff functions, where
+  
+  $
+  u_i : A_1 times dots.h.c times A_n -> bb(R).
+  $
+  
+ We also reuse the letter $u_i$ to denote the expected utility when players play according to strategies $bold(x)_1,...,bold(x)_n$.
+  
+Then for any Nash equilibrium $(bold(x)_1,...,bold(x)_n)$, by definition,
+
+  $
+    forall i in \[ n \] \, vx'_i in Delta (A_i) \, #h(2em) #h(2em) u_i (vx'_i \, vx_(- i)) <= u_i (vx_1 \, ... \, vx_n) .
+  $
+
+  The key observation is that the Nash equilibrium condition is equivalent up to a scalar translation of the utility function. For each payoff function $u_i$, let $p_i = min(u_i)$ over all payoffs in $u_i$. We will define a new normal-form game $cal(G)'$ with the same players, same actions, and new payoff functions
+  
+  $
+  forall i in \[ n \] \, #h(2em) #h(2em)u_i ' = u_i - p_i + 1.
+  $
+
+  We note that $cal(G)'$ can be defined in polynomial-time given $cal(G)$, and all payoff entries of $cal(G)'$ are strictly positive because
+
+  $
+  min(u_i ') = min(u_i) - p_i+1 = 1.
+  $
+
+  Furthermore,
+
+  $
+  forall i in \[ n \] \, vx'_i in Delta (A_i) \, #h(2em) #h(2em) u_i (vx'_i \, vx_(- i)) &<= u_i (vx_1 \, ... \, vx_n) \
+  <==> u_i (vx'_i \, vx_(- i)) - p_i+1 &<= u_i (vx_1 \, ... \, vx_n) - p_i+1 \
+  <==> u_i ' (vx'_i \, vx_(- i)) &<= u_i ' (vx_1 \, ... \, vx_n),
+  $
+  
+  so every Nash equilibrium of $cal(G)$ is a Nash equilibrium of $cal(G)'$ and vice versa. Thus, computing a Nash equilibrium of an arbitrary game $cal(G)$ can be polynomial-time reduced to the problem of computing a Nash equilibrium of a game $cal(G')$ whose payoff entries are all strictly positive.
+  ]
+
+  Potential point of confusion: One might ask if we can adjust all of our utility functions by a constant so that all entries are positive, then can we not use the same trick make all utilities average to zero, and thus reduce all normal-form games to zero-sum games?
+
+  Obviously, the answer is no, we cannot use this trick to reduce all normal form games to zero-sum games. This is because zero-sum games are not defined by the average utility of a single player being zero, but rather by the payoffs summed over all players being zero.
+
+  As an example, suppose we take a very simple two player game $cal(G):=(R,C)$, where the first player has one action and the second player has two actions, with the payoff matrices
+  $
+    R := mat(delim: "(", 1 \, -1 ) #h(2em) C := mat(delim: "(", 0 \, 1 ).
+  $
+
+  Now obviously this is not much of a game, as the outcome is completely controlled by the column player, but we can also see using this example that there is no way to convert this game to a zero-sum game simply by adding a constant to the payoff. By adding any arbitrary constants $r$ and $c$ to the payoff matrices, we can get a game $cal(G)':= (R',C')$ with
+  $
+    R' := mat(delim: "(", 1+r \, -1+r ) #h(2em) C' := mat(delim: "(", c \, 1+c ),
+  $
+  which has the same Nash equilibria as $cal(G)$. However, in order for $cal(G)'$ to be a zero-sum game, we would require $R' + C' =0$, which we find is not possible for any constants $r, c$.
+
+  Our constants shift every payoff of a given player by the same amount, and therefore preserve that player's preferences over strategies. In this example, choosing \(c=-1/2\) makes the column player's average of the payoff entries zero (the row player's average of payoff entries is already zero). Nevertheless, the resulting game is not zero-sum, which requires $sum_i u_i=0$, that is, the SUM of all payoffs of all players to be zero for any selection of pure strategies.
+
+]
